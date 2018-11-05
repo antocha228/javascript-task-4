@@ -13,11 +13,10 @@ function handle(context) {
 }
 
 function getEvents(event) {
-    let events = event.split('.');
-
-    if (events[1]) {
-        events[1] = `${events[0]}.${events[1]}`;
-        events.reverse();
+    let events = [];
+    while (event !== '') {
+        events.push(event);
+        event = event.substring(0, event.lastIndexOf('.'));
     }
 
     return events;
@@ -85,15 +84,10 @@ function getEmitter() {
         emit: function (event) {
             const events = getEvents(event);
 
-            for (let ev of events) {
-                if (subscriptions[ev]) {
-                    handle(subscriptions[ev]);
-                }
-            }
-            // events.forEach(ev => subscriptions[ev]
-            //     ? handle(subscriptions[ev])
-            //     : undefined
-            // );
+            events.forEach(ev => subscriptions[ev]
+                ? handle(subscriptions[ev])
+                : undefined
+            );
 
             return this;
         },
