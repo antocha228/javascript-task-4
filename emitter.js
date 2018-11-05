@@ -30,13 +30,13 @@ function getEvents(event) {
 function getEmitter() {
     let subscriptions = new Map();
 
-    function nameCheck(ev, event) {
-        const dotCheck = event.includes('.');
-        const nameDoesntHaveDotCase = (ev === event || ev.startsWith(`${event}.`)) && !dotCheck;
-        const nameHaveDotCase = ev === event && dotCheck;
+    // function nameCheck(ev, event) {
+    //     const dotCheck = event.includes('.');
+    //     const nameDoesntHaveDotCase = (ev === event || ev.startsWith(`${event}.`)) && !dotCheck;
+    //     const nameHaveDotCase = ev === event && dotCheck;
 
-        return nameDoesntHaveDotCase || nameHaveDotCase;
-    }
+    //     return nameDoesntHaveDotCase || nameHaveDotCase;
+    // }
 
 
     return {
@@ -69,7 +69,7 @@ function getEmitter() {
         off: function (event, context) {
 
             for (const ev in subscriptions) {
-                if (nameCheck(ev, event)) {
+                if (ev === event || ev.startsWith(`${event}.`)) {
                     subscriptions[ev].delete(context);
                 }
             }
