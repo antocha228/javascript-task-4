@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-const isStar = false;
+const isStar = true;
 
 function handle(context) {
     for (let [student, handlers] of context) {
@@ -128,7 +128,7 @@ function getEmitter() {
                 handler: handler,
                 count: 0,
                 times: times,
-                frequency: 0
+                frequency: 1
             });
 
             return this;
