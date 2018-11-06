@@ -8,7 +8,15 @@ const isStar = false;
 
 function handle(context) {
     for (let [student, handlers] of context) {
-        handlers.forEach(handler => handler.call(student));
+
+        handlers.forEach(handler => {
+            if (handler.times > 0 && handler.count % handler.frequency === 0) {
+                // console.info(handler);
+                handler.handler.call(student);
+                handler.times--;
+            }
+            handler.count++;
+        });
     }
 }
 
@@ -54,7 +62,14 @@ function getEmitter() {
             if (!subscriptions[event].get(context)) {
                 subscriptions[event].set(context, []);
             }
-            subscriptions[event].get(context).push(handler);
+
+            subscriptions[event].get(context).push({
+                handler: handler,
+                count: 0,
+                times: Infinity,
+                frequency: 1
+            });
+            // console.info(subscriptions);
 
             return this;
         },
@@ -83,7 +98,7 @@ function getEmitter() {
          */
         emit: function (event) {
             const events = getEvents(event);
-
+            // console.info(event);
             events.forEach(ev => subscriptions[ev]
                 ? handle(subscriptions[ev])
                 : undefined
@@ -99,9 +114,24 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (!subscriptions[event]) {
+                subscriptions[event] = new Map();
+            }
+            if (!subscriptions[event].get(context)) {
+                subscriptions[event].set(context, []);
+            }
+
+            subscriptions[event].get(context).push({
+                handler: handler,
+                count: 0,
+                times: times,
+                frequency: 0
+            });
+
+            return this;
         },
 
         /**
@@ -111,9 +141,24 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (!subscriptions[event]) {
+                subscriptions[event] = new Map();
+            }
+            if (!subscriptions[event].get(context)) {
+                subscriptions[event].set(context, []);
+            }
+
+            subscriptions[event].get(context).push({
+                handler: handler,
+                count: 0,
+                times: Infinity,
+                frequency: frequency
+            });
+
+            return this;
         }
     };
 }
