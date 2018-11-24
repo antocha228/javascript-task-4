@@ -8,14 +8,12 @@ const isStar = true;
 
 function handle(context) {
     for (let [student, handlers] of context) {
-
-        handlers.forEach(handler => {
-            if (handler.times > 0 && handler.count % handler.frequency === 0) {
-                // console.info(handler);
-                handler.handler.call(student);
-                handler.times--;
+        handlers.forEach(handlerObject => {
+            if (handlerObject.times > 0 && handlerObject.count % handlerObject.frequency === 0) {
+                handlerObject.handler.call(student);
+                handlerObject.times--;
             }
-            handler.count++;
+            handlerObject.count++;
         });
     }
 }
@@ -30,21 +28,20 @@ function getEvents(event) {
     return events;
 }
 
+function nameCheck(ev, event) {
+    const hasDot = event.includes('.');
+    const nameDoesntHaveDot = ev === event && !hasDot;
+    const nameHasDot = ev === event && hasDot;
+
+    return nameDoesntHaveDot || nameHasDot;
+}
+
 /**
  * Возвращает новый emitter
  * @returns {Object}
  */
 function getEmitter() {
     let subscriptions = new Map();
-
-    function nameCheck(ev, event) {
-        const dotCheck = event.includes('.');
-        const nameDoesntHaveDotCase = (ev === event || ev.startsWith(`${event}.`)) && !dotCheck;
-        const nameHaveDotCase = ev === event && dotCheck;
-
-        return nameDoesntHaveDotCase || nameHaveDotCase;
-    }
-
 
     return {
 
@@ -69,7 +66,6 @@ function getEmitter() {
                 times: Infinity,
                 frequency: 1
             });
-            // console.info(subscriptions);
 
             return this;
         },
@@ -81,7 +77,6 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-
             for (const ev in subscriptions) {
                 if (nameCheck(ev, event)) {
                     subscriptions[ev].delete(context);
@@ -98,7 +93,6 @@ function getEmitter() {
          */
         emit: function (event) {
             const events = getEvents(event);
-            // console.info(event);
             events.forEach(ev => subscriptions[ev]
                 ? handle(subscriptions[ev])
                 : undefined
