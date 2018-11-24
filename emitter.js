@@ -6,6 +6,11 @@
  */
 const isStar = true;
 
+
+/**
+ * Применяет handlers к студентам, подписавшимся на событие
+ * @param {Map} context
+ */
 function handle(context) {
     for (let [student, handlers] of context) {
         handlers.forEach(handlerObject => {
@@ -18,6 +23,12 @@ function handle(context) {
     }
 }
 
+/**
+ * Возвращает список ивентов (на случай, если ивент содержит точку)
+ * @param {String} event
+ * @returns {[String]}
+ */
+
 function getEvents(event) {
     let events = [];
     while (event !== '') {
@@ -28,12 +39,36 @@ function getEvents(event) {
     return events;
 }
 
-function nameCheck(ev, event) {
-    const hasDot = event.includes('.');
-    const nameDoesntHaveDot = ev === event && !hasDot;
-    const nameHasDot = ev === event && hasDot;
+/**
+ * Проверяет, имеет ли ивент из подписок поданный ивент
+ * @param {String} eventFromSubscriptions
+ * @param {String} eventToFind
+ * @returns {Boolean}
+ */
 
-    return nameDoesntHaveDot || nameHasDot;
+function eventMatches(eventFromSubscriptions, eventToFind) {
+    const hasDot = eventToFind.includes('.');
+    const eventHasNoDots = eventFromSubscriptions === eventToFind ||
+        eventFromSubscriptions.startsWith(`${eventToFind}.`) &&
+        !hasDot;
+    const nameHasDot = eventFromSubscriptions === eventToFind && hasDot;
+
+    return eventHasNoDots || nameHasDot;
+}
+
+/**
+ * Выставляет начальные значения для ивента в подписках
+ * @param {Map} subscriptions
+ * @param {String} event
+ * @param {Object} context
+ */
+function setInitialValues(subscriptions, event, context) {
+    if (!subscriptions[event]) {
+        subscriptions[event] = new Map();
+    }
+    if (!subscriptions[event].get(context)) {
+        subscriptions[event].set(context, []);
+    }
 }
 
 /**
@@ -53,12 +88,7 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (!subscriptions[event]) {
-                subscriptions[event] = new Map();
-            }
-            if (!subscriptions[event].get(context)) {
-                subscriptions[event].set(context, []);
-            }
+            setInitialValues(subscriptions, event, context);
 
             subscriptions[event].get(context).push({
                 handler: handler,
@@ -77,9 +107,9 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            for (const ev in subscriptions) {
-                if (nameCheck(ev, event)) {
-                    subscriptions[ev].delete(context);
+            for (const eventFromSubscriptions in subscriptions) {
+                if (eventMatches(eventFromSubscriptions, event)) {
+                    subscriptions[eventFromSubscriptions].delete(context);
                 }
             }
 
@@ -93,10 +123,8 @@ function getEmitter() {
          */
         emit: function (event) {
             const events = getEvents(event);
-            events.forEach(ev => subscriptions[ev]
-                ? handle(subscriptions[ev])
-                : undefined
-            );
+            events.filter(ev => subscriptions[ev])
+                .forEach(ev => handle(subscriptions[ev]));
 
             return this;
         },
@@ -111,12 +139,7 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            if (!subscriptions[event]) {
-                subscriptions[event] = new Map();
-            }
-            if (!subscriptions[event].get(context)) {
-                subscriptions[event].set(context, []);
-            }
+            setInitialValues(subscriptions, event, context);
 
             subscriptions[event].get(context).push({
                 handler: handler,
@@ -138,12 +161,7 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            if (!subscriptions[event]) {
-                subscriptions[event] = new Map();
-            }
-            if (!subscriptions[event].get(context)) {
-                subscriptions[event].set(context, []);
-            }
+            setInitialValues(subscriptions, event, context);
 
             subscriptions[event].get(context).push({
                 handler: handler,
